@@ -6,31 +6,42 @@ import { SidePanel } from 'polotno/side-panel'
 import { STUDIO_SECTIONS } from '../sections/templatesSection'
 import { Workspace } from 'polotno/canvas/workspace'
 import type { StoreType } from 'polotno/model/store'
+import { useEditorAutosave } from '../hooks/useEditorAutosave'
 import { HdExportBar } from './HdExportBar'
+import { BrandLogo } from './BrandLogo'
 
 export function StudioEditor({
   store,
   onHome,
+  exportBaseName = 'งาน',
 }: {
   store: StoreType
-  onHome?: () => void
+  onHome?: () => void | Promise<void>
+  exportBaseName?: string
 }) {
+  useEditorAutosave(store, exportBaseName, true)
+
   return (
     <div className="studio-shell">
       <header className="studio-header">
         {onHome && (
-          <button type="button" className="studio-header__back" onClick={onHome}>
+          <button
+            type="button"
+            className="studio-header__back"
+            onClick={() => {
+              void onHome()
+            }}
+          >
             ← หน้าหลัก
           </button>
         )}
         <div className="studio-brand">
-          <span className="studio-brand__mark" aria-hidden />
-          <div>
-            <span className="studio-brand__name">marc-canva</span>
+          <BrandLogo className="studio-brand__logo--header" />
+          <div className="studio-brand__meta">
             <span className="studio-brand__tag">สตูดิโอตัดต่อรูป</span>
           </div>
         </div>
-        <HdExportBar store={store} />
+        <HdExportBar store={store} exportBaseName={exportBaseName} />
       </header>
 
       <PolotnoContainer className="studio-root bp5-dark">

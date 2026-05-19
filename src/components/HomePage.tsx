@@ -1,8 +1,10 @@
-import { useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent, type CSSProperties } from 'react'
 import type { StoreType } from 'polotno/model/store'
+import { ROLES } from 'polotno/model/store'
 import { CategoryIcon } from './CategoryIcon'
 import { HOME_QUICK_CATEGORIES } from '../data/designHub'
 import { HOME_TEMPLATE_SECTIONS } from '../data/homeTemplateSections'
+import { TEMPLATE_TOTAL_COUNT } from '../data/curatedTemplates'
 import { NavIcon } from './NavIcon'
 import {
   EMPTY_RECENT_DESIGNS,
@@ -11,9 +13,12 @@ import {
   type RecentDesign,
 } from '../lib/recentDesigns'
 import { CreateDesignModal } from './CreateDesignModal'
-import type { TemplateItem } from './TemplateCardGrid'
 import { HomeTemplateSectionBlock } from './HomeTemplateSectionBlock'
-import { prepareBlankCanvas, prepareCanvasFromTemplate } from '../lib/canvasSession'
+import { BrandLogo } from './BrandLogo'
+import { prepareBlankCanvas } from '../lib/canvasSession'
+import { openCatalogTemplate } from '../lib/openCatalogTemplate'
+import type { CatalogTemplateItem } from '../types/catalogTemplate'
+import { clearEditorDraft, getEditorDraft, hasEditorDraft, subscribeEditorDraft } from '../lib/editorDraft'
 
 type Props = {
   store: StoreType
@@ -33,10 +38,27 @@ export function HomePage({ store, onOpenEditor }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalGroup, setModalGroup] = useState('for-you')
   const [heroSearch, setHeroSearch] = useState('')
+  const [homeLoadError, setHomeLoadError] = useState<string | null>(null)
+  const seenTemplateKeys = useRef(new Set<string>()).current
   const recent = useSyncExternalStore(
     subscribeRecentDesigns,
     getRecentDesignsSnapshot,
     () => EMPTY_RECENT_DESIGNS,
+  )
+  const draftVisible = useSyncExternalStore(
+    subscribeEditorDraft,
+    () => hasEditorDraft(),
+    () => false,
+  )
+  const importRef = useRef<HTMLInputElement>(null)
+  const recentCount = recent.length
+  const quickSummary = useMemo(
+    () => [
+      { label: 'ล่าสุด', value: recentCount.toString() },
+      { label: 'เทมเพลตในระบบ', value: TEMPLATE_TOTAL_COUNT.toString() },
+      { label: 'หมวดด่วน', value: HOME_QUICK_CATEGORIES.length.toString() },
+    ],
+    [recentCount],
   )
 
   const openModal = (groupId = 'for-you') => {
@@ -45,14 +67,74 @@ export function HomePage({ store, onOpenEditor }: Props) {
   }
 
   const openRecent = (item: RecentDesign) => {
-    store.clear()
-    store.loadJSON(JSON.parse(item.json), true)
-    onOpenEditor({
-      title: item.title,
-      width: item.width,
-      height: item.height,
-      preview: item.preview,
-    })
+    try {
+      const data = JSON.parse(item.json) as unknown
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        !Array.isArray((data as { pages?: unknown }).pages)
+      ) {
+        throw new Error('invalid')
+      }
+      store.clear()
+      store.loadJSON(data as never, true)
+      store.setRole(ROLES.ADMIN)
+      setHomeLoadError(null)
+      onOpenEditor({
+        title: item.title,
+        width: item.width,
+        height: item.height,
+        preview: item.preview,
+      })
+    } catch {
+      setHomeLoadError('เปิดงานล่าสุดไม่ได้ — ข้อมูลในเครื่องอาจเสียหายหรือไม่สมบูรณ์')
+    }
+  }
+
+  const resumeDraft = () => {
+    const d = getEditorDraft()
+    if (!d) return
+    try {
+      const data = JSON.parse(d.json) as unknown
+      if (!data || typeof data !== 'object' || !Array.isArray((data as { pages?: unknown }).pages)) {
+        throw new Error('invalid')
+      }
+      store.clear()
+      store.loadJSON(data as never, true)
+      store.setRole(ROLES.ADMIN)
+      setHomeLoadError(null)
+      onOpenEditor({
+        title: d.title || 'งานบันทึกอัตโนมัติ',
+        width: store.width,
+        height: store.height,
+      })
+    } catch {
+      clearEditorDraft()
+      setHomeLoadError('กู้คืนร่างไม่สำเร็จ')
+    }
+  }
+
+  const onImportJson = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setHomeLoadError(null)
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text) as unknown
+      if (!data || typeof data !== 'object' || !Array.isArray((data as { pages?: unknown }).pages)) {
+        throw new Error('invalid')
+      }
+      store.clear()
+      store.loadJSON(data as never, true)
+      store.setRole(ROLES.ADMIN)
+      const w = (data as { width?: number }).width ?? store.width
+      const h = (data as { height?: number }).height ?? store.height
+      const base = file.name.replace(/\.json$/i, '') || 'นำเข้า'
+      onOpenEditor({ title: base, width: w, height: h })
+    } catch {
+      setHomeLoadError('นำเข้า JSON ไม่สำเร็จ — ตรวจสอบว่าเป็นไฟล์ Polotno / marc-canva')
+    }
   }
 
   const quickBlank = (width: number, height: number, title: string) => {
@@ -60,19 +142,23 @@ export function HomePage({ store, onOpenEditor }: Props) {
     onOpenEditor({ title, width, height })
   }
 
-  const quickTemplate = async (item: TemplateItem) => {
-    await prepareCanvasFromTemplate(store, item, 1080, 1080)
-    onOpenEditor({ title: 'เทมเพลต', width: 1080, height: 1080, preview: item.preview })
+  const quickCatalogTemplate = async (item: CatalogTemplateItem) => {
+    setHomeLoadError(null)
+    try {
+      const meta = await openCatalogTemplate(store, item)
+      onOpenEditor(meta)
+    } catch (e) {
+      setHomeLoadError(e instanceof Error ? e.message : 'โหลดเทมเพลตไม่สำเร็จ')
+    }
   }
 
   return (
     <div className="home">
       <aside className="home-sidebar">
         <div className="home-sidebar__brand">
-          <span className="studio-brand__mark" aria-hidden />
-          <span className="home-sidebar__name">marc-canva</span>
+          <BrandLogo className="studio-brand__logo--sidebar" />
         </div>
-        <nav className="home-sidebar__nav">
+        <nav className="home-sidebar__nav" aria-label="เมนูหลัก">
           <button type="button" className="home-sidebar__link home-sidebar__link--active">
             <NavIcon id="home" size={22} />
             หน้าหลัก
@@ -89,8 +175,45 @@ export function HomePage({ store, onOpenEditor }: Props) {
       </aside>
 
       <main className="home-main">
+        {homeLoadError ? (
+          <div className="home-toast home-toast--error" role="alert">
+            <p>{homeLoadError}</p>
+            <button type="button" className="home-toast__dismiss" onClick={() => setHomeLoadError(null)}>
+              ปิด
+            </button>
+          </div>
+        ) : null}
+        {draftVisible ? (
+          <div className="home-draft-banner" role="status">
+            <p>
+              <strong>พบงานบันทึกอัตโนมัติ</strong> — เปิดต่อได้ถ้าปิดแท็บหรือรีเฟรชโดยไม่ตั้งใจ
+            </p>
+            <div className="home-draft-banner__actions">
+              <button type="button" className="home-draft-banner__primary" onClick={resumeDraft}>
+                เปิดต่อใน Studio
+              </button>
+              <button type="button" className="home-draft-banner__ghost" onClick={() => clearEditorDraft()}>
+                ละทิ้งร่าง
+              </button>
+            </div>
+          </div>
+        ) : null}
         <section className="home-hero">
-          <h1>วันนี้คุณจะดีไซน์อะไร?</h1>
+          <div className="home-hero__content">
+            <p className="home-hero__eyebrow">ออกแบบเร็วขึ้น เริ่มจากเทมเพลตที่ใช่</p>
+            <h1>วันนี้คุณจะดีไซน์อะไร?</h1>
+            <p className="home-hero__subtitle">
+              เลือกขนาดงาน เทมเพลต หรือเริ่มจากผืนผ้าใบเปล่าได้ในไม่กี่วินาที
+            </p>
+            <div className="home-hero__stats" aria-label="ข้อมูลสรุป">
+              {quickSummary.map((item) => (
+                <div key={item.label} className="home-hero__stat">
+                  <strong>{item.value}</strong>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="home-hero__search">
             <NavIcon id="search" size={20} className="home-hero__search-icon" />
             <input
@@ -102,6 +225,17 @@ export function HomePage({ store, onOpenEditor }: Props) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') openModal('for-you')
               }}
+            />
+            <button type="button" className="home-hero__import" onClick={() => importRef.current?.click()}>
+              นำเข้า JSON
+            </button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json,.json"
+              className="home-hero__import-input"
+              aria-label="เลือกไฟล์ JSON นำเข้า"
+              onChange={onImportJson}
             />
             <button type="button" className="home-hero__create" onClick={() => openModal('for-you')}>
               สร้างดีไซน์
@@ -148,7 +282,11 @@ export function HomePage({ store, onOpenEditor }: Props) {
         {recent.length > 0 && (
           <section className="home-section">
             <div className="home-section__head">
-              <h2>ล่าสุด</h2>
+              <div>
+                <p className="home-section__eyebrow">กลับไปทำต่อ</p>
+                <h2>ล่าสุด</h2>
+              </div>
+              <span className="home-section__count">{recent.length} งาน</span>
             </div>
             <div className="home-recent">
               {recent.map((item) => (
@@ -160,7 +298,12 @@ export function HomePage({ store, onOpenEditor }: Props) {
                 >
                   <div className="home-recent__thumb">
                     {item.preview ? (
-                      <img src={item.preview} alt="" />
+                      <img
+                        src={item.preview}
+                        alt={`ตัวอย่าง ${item.title}`}
+                        loading="lazy"
+                        decoding="async"
+                      />
                     ) : (
                       <span className="home-recent__placeholder">
                         {item.width}×{item.height}
@@ -181,9 +324,15 @@ export function HomePage({ store, onOpenEditor }: Props) {
           <HomeTemplateSectionBlock
             key={sec.id}
             section={sec}
-            heroSearch={heroSearch}
-            eager={index < 3}
-            onSelect={quickTemplate}
+            sectionIndex={index}
+            seenKeys={seenTemplateKeys}
+            eager={
+              sec.id === 'trending' ||
+              sec.id === 'curated-picks' ||
+              sec.id === 'unsplash-inspire' ||
+              index < 4
+            }
+            onSelect={quickCatalogTemplate}
             onSeeAll={sec.modalGroupId ? () => openModal(sec.modalGroupId!) : undefined}
           />
         ))}

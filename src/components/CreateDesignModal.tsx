@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type { StoreType } from 'polotno/model/store'
 import { CategoryIcon } from './CategoryIcon'
 import { DESIGN_GROUPS, getDesignGroup, type DesignFormat } from '../data/designHub'
@@ -24,14 +24,39 @@ export function CreateDesignModal({
   const [groupId, setGroupId] = useState(initialGroupId)
   const [search, setSearch] = useState('')
   const [formatId, setFormatId] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
+  const lastFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (open) {
       setGroupId(initialGroupId)
       setSearch('')
       setFormatId(null)
+      setLoadError(null)
     }
   }, [open, initialGroupId])
+
+  useEffect(() => {
+    setLoadError(null)
+  }, [groupId, formatId, search])
+
+  useEffect(() => {
+    if (!open) return
+    lastFocusRef.current = document.activeElement as HTMLElement
+    document.documentElement.classList.add('modal-open')
+    const t = window.setTimeout(() => closeBtnRef.current?.focus(), 0)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      window.clearTimeout(t)
+      document.removeEventListener('keydown', onKey)
+      document.documentElement.classList.remove('modal-open')
+      lastFocusRef.current?.focus?.()
+    }
+  }, [open, onClose])
 
   const group = getDesignGroup(groupId)
   const activeFormat: DesignFormat | null =
@@ -56,13 +81,19 @@ export function CreateDesignModal({
   const openTemplate = async (item: TemplateItem) => {
     const w = activeFormat?.width ?? store.width
     const h = activeFormat?.height ?? store.height
-    await prepareCanvasFromTemplate(store, item, w, h)
-    onOpenEditor({
-      title: group.label,
-      width: w,
-      height: h,
-      preview: item.preview,
-    })
+    setLoadError(null)
+    try {
+      await prepareCanvasFromTemplate(store, item, w, h)
+      onOpenEditor({
+        title: group.label,
+        width: w,
+        height: h,
+        preview: item.preview,
+      })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'โหลดเทมเพลตไม่สำเร็จ'
+      setLoadError(msg)
+    }
   }
 
   return (
@@ -70,25 +101,43 @@ export function CreateDesignModal({
       <div
         className="create-modal"
         role="dialog"
+        aria-modal="true"
         aria-labelledby="create-modal-title"
+        aria-describedby={loadError ? 'create-modal-error' : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="create-modal__header">
           <h2 id="create-modal-title">สร้างดีไซน์</h2>
           <div className="create-modal__search-wrap">
-            <NavIcon id="search" size={18} className="create-modal__search-icon" />
+            <span className="create-modal__search-icon" aria-hidden>
+              <NavIcon id="search" size={18} />
+            </span>
             <input
               type="search"
               className="create-modal__search"
               placeholder="คุณต้องการสร้างอะไร"
+              aria-label="ค้นหาเทมเพลต"
               value={search}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             />
           </div>
-          <button type="button" className="create-modal__close" onClick={onClose} aria-label="ปิด">
-            <NavIcon id="close" size={20} />
+          <button
+            ref={closeBtnRef}
+            type="button"
+            className="create-modal__close"
+            onClick={onClose}
+            aria-label="ปิด"
+          >
+            <span aria-hidden>
+              <NavIcon id="close" size={20} />
+            </span>
           </button>
         </header>
+        {loadError ? (
+          <div id="create-modal-error" className="create-modal__error" role="alert">
+            {loadError}
+          </div>
+        ) : null}
 
         <div className="create-modal__body">
           <nav className="create-modal__nav">

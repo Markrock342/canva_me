@@ -53,29 +53,49 @@ export function notifyRecentDesignsUpdated() {
   window.dispatchEvent(new Event(RECENT_UPDATED_EVENT))
 }
 
+function writeRecentList(merged: RecentDesign[]): boolean {
+  let list = merged
+  while (list.length > 0) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+      cachedRaw = undefined
+      notifyRecentDesignsUpdated()
+      return true
+    } catch {
+      const stripped = list.map((d, i) =>
+        i >= list.length - 2 ? { ...d, preview: undefined } : d,
+      )
+      list = stripped.slice(0, -1)
+    }
+  }
+  return false
+}
+
 export function saveRecentDesign(entry: Omit<RecentDesign, 'id' | 'updatedAt'> & { id?: string }) {
   const list = loadRecentDesigns()
   const id = entry.id ?? crypto.randomUUID()
   const next: RecentDesign = {
     id,
     title: entry.title,
-    width: entry.width,
-    height: entry.height,
+    width: Math.max(1, Math.round(entry.width)),
+    height: Math.max(1, Math.round(entry.height)),
     preview: entry.preview,
     updatedAt: Date.now(),
     json: entry.json,
   }
   const filtered = list.filter((d) => d.id !== id)
   const merged = [next, ...filtered].slice(0, MAX_ITEMS)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
-  cachedRaw = undefined
-  notifyRecentDesignsUpdated()
+  writeRecentList(merged)
   return next
 }
 
 export function removeRecentDesign(id: string) {
   const list = loadRecentDesigns().filter((d) => d.id !== id)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+  } catch {
+    /* ignore */
+  }
   cachedRaw = undefined
   notifyRecentDesignsUpdated()
 }
