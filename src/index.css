@@ -1,0 +1,514 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap');
+
+:root {
+  --canvame-bg: #0f0f12;
+  --canvame-surface: #18181f;
+  --canvame-surface-2: #1e1e28;
+  --canvame-border: #2a2a38;
+  --canvame-accent: #7c5cff;
+  --canvame-accent-soft: rgba(124, 92, 255, 0.18);
+  --canvame-mint: #2ee6c5;
+  --canvame-text: #f4f4f8;
+  --canvame-muted: #9b9bb0;
+  --canvame-panel: #ffffff;
+  --canvame-panel-text: #1a1a24;
+  --canvame-rail: #14141a;
+  --studio-header-h: 52px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--canvame-bg);
+  color: var(--canvame-text);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.api-banner {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  background: #2a2210;
+  border-bottom: 1px solid #4a3a12;
+  color: #f5e6b8;
+}
+
+.api-banner a {
+  color: var(--canvame-mint);
+}
+
+.api-banner code {
+  font-size: 0.75rem;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Shell: header บน + editor ล่าง */
+.studio-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.studio-header {
+  flex-shrink: 0;
+  height: var(--studio-header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 1rem 0 0.875rem;
+  background: var(--canvame-surface);
+  border-bottom: 1px solid var(--canvame-border);
+  z-index: 30;
+}
+
+.studio-header .studio-brand {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.studio-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.studio-brand__mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--canvame-accent) 0%, var(--canvame-mint) 100%);
+  box-shadow: 0 0 20px rgba(124, 92, 255, 0.35);
+}
+
+.studio-brand__name {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.studio-brand__tag {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--canvame-muted);
+  letter-spacing: 0.02em;
+}
+
+/* Polotno — ต้องเป็น flex แนวนอน 2 คอลัมน์เท่านั้น */
+.studio-root.polotno-container,
+.studio-root.bp5-scope {
+  flex: 1;
+  min-height: 0;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+.studio-root .polotno-side-panel-wrap,
+.studio-root > div:first-of-type {
+  flex-shrink: 0;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+.studio-root .polotno-workspace-wrap,
+.studio-root > div:last-of-type {
+  flex: 1;
+  min-width: 0;
+  height: 100% !important;
+}
+
+/* ——— Side panel (ซ้าย) ——— */
+.studio-root .polotno-side-panel.bp5-navbar {
+  background: var(--canvame-rail) !important;
+  border-right: 1px solid var(--canvame-border);
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: 100% !important;
+}
+
+.studio-root .polotno-side-tabs-container {
+  background: var(--canvame-rail);
+  border-right: 1px solid var(--canvame-border);
+}
+
+.studio-root .polotno-side-panel-tab {
+  color: var(--canvame-muted) !important;
+  border-radius: 10px;
+  margin: 2px 6px;
+  width: calc(100% - 12px) !important;
+  height: 64px !important;
+  padding-top: 10px !important;
+  font-size: 10px !important;
+  line-height: 1.2;
+  transition: background 0.15s, color 0.15s;
+}
+
+.studio-root .polotno-side-panel-tab:hover {
+  background: var(--canvame-accent-soft) !important;
+  color: var(--canvame-text) !important;
+}
+
+.studio-root .polotno-side-panel-tab.active {
+  background: var(--canvame-accent-soft) !important;
+  color: var(--canvame-mint) !important;
+}
+
+.studio-root .polotno-side-panel-tab.active .bp5-icon,
+.studio-root .polotno-side-panel-tab:hover .bp5-icon {
+  color: var(--canvame-mint) !important;
+}
+
+/* แผงเนื้อหา (เทมเพลต, รูป ฯลฯ) */
+.studio-root .polotno-panel-container.bp5-navbar {
+  background: var(--canvame-panel) !important;
+  color: var(--canvame-panel-text);
+  border-right: 1px solid #e8e8ef;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+.studio-root .polotno-panel-container .bp5-input,
+.studio-root .polotno-panel-container .bp5-input-group {
+  color: var(--canvame-panel-text);
+}
+
+.studio-root .polotno-panel-container .bp5-input::placeholder {
+  color: #888;
+}
+
+/* bp5-dark เคย invert รูปไอคอนค้นหา → ดูขาวดำผิด */
+.studio-root .polotno-panel-container img {
+  filter: none !important;
+}
+
+/* แถบเลือกสีองค์ประกอบ */
+.marc-elements-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.marc-elements-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.elements-color-bar {
+  flex-shrink: 0;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid #e8e8ef;
+  margin-bottom: 12px;
+}
+
+.elements-color-bar__hint {
+  margin: 0 0 8px;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: #666;
+}
+
+.elements-color-bar__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.elements-color-bar__swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: transform 0.12s, border-color 0.12s;
+}
+
+.elements-color-bar__swatch:hover {
+  transform: scale(1.08);
+}
+
+.elements-color-bar__swatch.is-active {
+  border-color: var(--canvame-accent);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--canvame-accent);
+}
+
+/* ทำ preview รูปทรงในกริดให้มีโทนสีเล็กน้อย */
+.studio-root .polotno-panel-container [role='button'] img {
+  filter: saturate(1.35) brightness(1.05);
+}
+
+/* แผงเทมเพลต — แก้ข้อความขาวบนพื้นขาว (bp5-dark บน parent) */
+.studio-root .polotno-panel-container .bp5-control,
+.studio-root .polotno-panel-container .bp5-switch,
+.studio-root .polotno-panel-container label.bp5-label {
+  color: var(--canvame-panel-text) !important;
+}
+
+.studio-root .polotno-panel-container .bp5-input,
+.studio-root .polotno-panel-container .bp5-input-group .bp5-icon {
+  color: var(--canvame-panel-text);
+}
+
+/* ——— แผงเทมเพลต custom ——— */
+.canvame-templates-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.canvame-templates-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+
+.canvame-templates-cat {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border: 1px solid #e0e0ea;
+  border-radius: 999px;
+  background: #f5f5fa;
+  color: var(--canvame-panel-text);
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.canvame-templates-cat:hover {
+  border-color: var(--canvame-accent);
+  background: var(--canvame-accent-soft);
+}
+
+.canvame-templates-cat--active {
+  border-color: var(--canvame-accent);
+  background: var(--canvame-accent);
+  color: #fff;
+}
+
+.canvame-templates-search {
+  position: relative;
+  flex-shrink: 0;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.canvame-templates-search__icon {
+  position: absolute;
+  left: 10px;
+  font-size: 1rem;
+  color: #888;
+  pointer-events: none;
+}
+
+.canvame-templates-search__input {
+  width: 100%;
+  padding-left: 2rem !important;
+  border-radius: 8px !important;
+  background: #f0f0f6 !important;
+  border: 1px solid #e0e0ea !important;
+  box-shadow: none !important;
+}
+
+.canvame-templates-switch {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 12px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--canvame-panel-text);
+  font-size: 0.8125rem;
+}
+
+.canvame-templates-switch__label {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.canvame-templates-switch input[type='checkbox'] {
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--canvame-accent);
+  cursor: pointer;
+}
+
+.canvame-templates-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ปุ่มยุบแผง */
+.studio-root .polotno-panel-container + div .fill {
+  fill: var(--canvame-surface-2);
+}
+
+/* Workspace */
+.studio-root .bp5-navbar.polotno-toolbar {
+  background: var(--canvame-surface) !important;
+  border-bottom: 1px solid var(--canvame-border);
+  min-height: 44px;
+}
+
+.studio-root .polotno-workspace-inner {
+  background: #121218 !important;
+}
+
+.studio-root .polotno-pages-timeline {
+  background: var(--canvame-surface) !important;
+  border-top: 1px solid var(--canvame-border);
+}
+
+/* ซ่อน branding Polotno ที่อาจอยู่ใน DOM (สำรอง) */
+.studio-root a[href*='polotno.com'],
+.polotno-credit,
+[class*='polotno-credit'] {
+  display: none !important;
+}
+
+/* HD export */
+.hd-export-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hd-export-bar__size {
+  font-size: 0.75rem;
+  color: var(--canvame-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hd-export-bar__dropdown {
+  position: relative;
+}
+
+.hd-export-bar__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, var(--canvame-accent), #5a3fd4);
+  transition: filter 0.15s;
+}
+
+.hd-export-bar__trigger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.hd-export-bar__trigger:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.hd-export-bar__chevron {
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+
+.hd-export-bar__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  margin: 0;
+  padding: 0.35rem;
+  min-width: 260px;
+  list-style: none;
+  border-radius: 10px;
+  background: #1e1e28;
+  border: 1px solid var(--canvame-border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  z-index: 100;
+}
+
+.hd-export-bar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--canvame-text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hd-export-bar__item strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.hd-export-bar__item span {
+  font-size: 0.6875rem;
+  color: var(--canvame-muted);
+}
+
+.hd-export-bar__item:hover {
+  background: var(--canvame-accent-soft);
+}
+
+.hd-export-bar__divider {
+  height: 1px;
+  margin: 0.25rem 0.35rem;
+  background: var(--canvame-border);
+}
