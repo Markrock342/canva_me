@@ -328,16 +328,61 @@ body,
   filter: saturate(1.35) brightness(1.05);
 }
 
-/* แผงเทมเพลต — แก้ข้อความขาวบนพื้นขาว (bp5-dark บน parent) */
+/* แผงข้าง — แก้ข้อความขาวบนพื้นขาว (parent เป็น bp5-dark แต่พื้นแผงเป็นสีขาว) */
 .studio-root .polotno-panel-container .bp5-control,
 .studio-root .polotno-panel-container .bp5-switch,
-.studio-root .polotno-panel-container label.bp5-label {
+.studio-root .polotno-panel-container label.bp5-label,
+.studio-root .polotno-panel-container p,
+.studio-root .polotno-panel-container h3,
+.studio-root .polotno-panel-container h4 {
   color: var(--canvame-panel-text) !important;
 }
 
 .studio-root .polotno-panel-container .bp5-input,
 .studio-root .polotno-panel-container .bp5-input-group .bp5-icon {
   color: var(--canvame-panel-text);
+}
+
+.studio-root .polotno-panel-container .bp5-button,
+.studio-root .polotno-panel-container .bp5-button .bp5-button-text {
+  color: var(--canvame-panel-text) !important;
+}
+
+.studio-root .polotno-panel-container .bp5-button.bp5-minimal,
+.studio-root .polotno-panel-container .polotno-close-panel.bp5-button {
+  color: var(--canvame-panel-text) !important;
+  background: #eef0f8 !important;
+  border: 1px solid #e0e0ea !important;
+  box-shadow: 0 1px 3px rgba(26, 26, 36, 0.06) !important;
+}
+
+.studio-root .polotno-panel-container .bp5-button.bp5-minimal:hover,
+.studio-root .polotno-panel-container .polotno-close-panel.bp5-button:hover {
+  background: var(--canvame-accent-soft) !important;
+  color: var(--canvame-accent) !important;
+  border-color: rgba(124, 92, 255, 0.35) !important;
+}
+
+.studio-root .polotno-panel-container .bp5-tabs .bp5-tab {
+  color: #5c5c70 !important;
+}
+
+.studio-root .polotno-panel-container .bp5-tabs .bp5-tab[aria-selected='true'] {
+  color: var(--canvame-accent) !important;
+}
+
+.studio-root .polotno-panel-container .bp5-tab-indicator-wrapper .bp5-tab-indicator {
+  background-color: var(--canvame-accent) !important;
+}
+
+.studio-root .polotno-panel-container .polotno-font-item {
+  color: var(--canvame-panel-text) !important;
+  background: #eef0f8 !important;
+  box-shadow: 0 1px 4px rgba(26, 26, 36, 0.08) !important;
+}
+
+.studio-root .polotno-panel-container .polotno-text-preview-plain {
+  filter: none !important;
 }
 
 /* ——— แผงเทมเพลต custom ——— */
